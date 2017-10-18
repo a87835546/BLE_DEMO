@@ -15,6 +15,7 @@
 		9B49BE0E1F790D2C002C69D5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B49BE0C1F790D2C002C69D5 /* LaunchScreen.storyboard */; };
 		9B49BE191F790D2C002C69D5 /* BLE_DEMOTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B49BE181F790D2C002C69D5 /* BLE_DEMOTests.m */; };
 		9B49BE241F790D2C002C69D5 /* BLE_DEMOUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B49BE231F790D2C002C69D5 /* BLE_DEMOUITests.m */; };
+		9B49BE331F7B9A60002C69D5 /* PeripheralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B49BE321F7B9A60002C69D5 /* PeripheralViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,8 @@
 		9B49BE1F1F790D2C002C69D5 /* BLE_DEMOUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BLE_DEMOUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B49BE231F790D2C002C69D5 /* BLE_DEMOUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BLE_DEMOUITests.m; sourceTree = "<group>"; };
 		9B49BE251F790D2C002C69D5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9B49BE311F7B9A60002C69D5 /* PeripheralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeripheralViewController.h; sourceTree = "<group>"; };
+		9B49BE321F7B9A60002C69D5 /* PeripheralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PeripheralViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +108,8 @@
 				9B49BE021F790D2C002C69D5 /* AppDelegate.m */,
 				9B49BE041F790D2C002C69D5 /* ViewController.h */,
 				9B49BE051F790D2C002C69D5 /* ViewController.m */,
+				9B49BE311F7B9A60002C69D5 /* PeripheralViewController.h */,
+				9B49BE321F7B9A60002C69D5 /* PeripheralViewController.m */,
 				9B49BE071F790D2C002C69D5 /* Main.storyboard */,
 				9B49BE0A1F790D2C002C69D5 /* Assets.xcassets */,
 				9B49BE0C1F790D2C002C69D5 /* LaunchScreen.storyboard */,
@@ -276,6 +281,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B49BE331F7B9A60002C69D5 /* PeripheralViewController.m in Sources */,
 				9B49BE061F790D2C002C69D5 /* ViewController.m in Sources */,
 				9B49BE031F790D2C002C69D5 /* AppDelegate.m in Sources */,
 				9B49BE001F790D2C002C69D5 /* main.m in Sources */,
@@ -518,6 +524,7 @@
 				9B49BE2A1F790D2C002C69D5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9B49BE2B1F790D2C002C69D5 /* Build configuration list for PBXNativeTarget "BLE_DEMOTests" */ = {
 			isa = XCConfigurationList;
@@ -526,6 +533,7 @@
 				9B49BE2D1F790D2C002C69D5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9B49BE2E1F790D2C002C69D5 /* Build configuration list for PBXNativeTarget "BLE_DEMOUITests" */ = {
 			isa = XCConfigurationList;
@@ -534,6 +542,7 @@
 				9B49BE301F790D2C002C69D5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

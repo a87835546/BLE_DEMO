@@ -8,8 +8,13 @@
 
 #import "ViewController.h"
 #import <CoreBluetooth/CoreBluetooth.h>
+#import "PeripheralViewController.h"
+#define SeriveID6666 @"6666"
+#define SeriveID7777 @"7777"
+#define CID8888 @"8888"  //读指令(监控蓝牙设备往APP发数据),6666提供
+#define CID8877 @"8877"  //APP向蓝牙发指令,7777提供
 @interface ViewController ()<CBCentralManagerDelegate,UITableViewDelegate,UITableViewDataSource,CBPeripheralDelegate>
-@property (nonatomic, strong) CBCentralManager *manager;
+@property (nonatomic, strong) CBCentralManager *cbManager;
 @property (nonatomic,strong) UITableView *tableView;
 @property (nonatomic,strong) NSMutableArray *peripheralArray;
 @property (nonatomic,strong) NSMutableArray *connectedPeripheralArray;
@@ -31,34 +36,22 @@
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-//    UIButton *btn = [[UIButton alloc] init];
-//    btn.frame = CGRectMake(100,50, 100, 50);
-//    [btn setTitle:@"add_ble" forState:UIControlStateNormal];
-//    [btn setBackgroundColor:[UIColor redColor]];
-//    [self.view addSubview:btn];
-//    [btn addTarget:self action:@selector(addBLE) forControlEvents:UIControlEventTouchUpInside];
-    
+
     
     self.tableView = [[UITableView alloc] init];
     self.tableView.frame =self.view.frame;
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.view addSubview:self.tableView];
     
-    self.manager = [[CBCentralManager alloc] init];
-    self.manager.delegate = self;
+    self.cbManager = [[CBCentralManager alloc] init];
+    self.cbManager.delegate = self;
     
-    [self.manager scanForPeripheralsWithServices:nil options:nil];
-    
-}
-- (void)addBLE {
-    NSLog(@"addBLE");
-    self.manager = [[CBCentralManager alloc] init];
-    self.manager.delegate = self;
- 
-    [self.manager scanForPeripheralsWithServices:nil options:nil];
+    [self.cbManager scanForPeripheralsWithServices:nil options:nil];
     
 }
+
 
 #pragma mark - CBCentralManagerDelegate
 //监听蓝牙状态,蓝牙状态改变时调用
@@ -84,7 +77,7 @@
         case CBCentralManagerStatePoweredOn:
             NSLog(@">>>蓝牙打开");
             //蓝牙打开时,再去扫描设备
-            [self.manager scanForPeripheralsWithServices:nil options:nil];
+            [self.cbManager scanForPeripheralsWithServices:nil options:nil];
             break;
         default:
             break;
@@ -93,12 +86,12 @@
 //发现外设时调用
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     
-    if (![_peripheralArray containsObject:peripheral]) {
+    if (![self.peripheralArray containsObject:peripheral]) {
         NSLog(@"发现外设:%@", peripheral);
         //打印结果:
         //发现外设:<CBPeripheral: 0x15f5bac80, identifier = 955A5FFD-790E-BA3C-2A94-29FEA8A14A58, name = TF1603(BLE), state = disconnected>
         //发现设备后,需要持有他
-        [_peripheralArray addObject:peripheral];
+        [self.peripheralArray addObject:peripheral];
         // NSLog(@"信号强度:%@", RSSI);
         //如果之前调用扫描外设的方法时,设置了相关参数,只会扫描到指定设备,可以考虑自动连接
         //[_cbManager connectPeripheral:peripheral options:nil];
@@ -107,11 +100,9 @@
         //如果这是单独封装的类,这里需要用代理或block或通知传值给控制器来刷新视图
     }
 }
-
 //外设连接成功时调用
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"连接成功");
-    //将连接的设备添加到_connectedPeripheralArray
     [self.connectedPeripheralArray addObject: peripheral];
     //如果tableView展示的是已经连接的设备
     //[tableView reloadData];
@@ -120,11 +111,13 @@
     peripheral.delegate = self;
     //搜索服务
     [peripheral discoverServices:nil];
+    
 }
-//外设连接失败时调用
-- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
-    NSLog(@"连接失败,%@", [error localizedDescription]);
+- (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
+    NSLog(@"连接失败:%@",error.userInfo);
+
 }
+
 //断开连接时调用
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     NSLog(@"断开连接");
@@ -132,6 +125,8 @@
     [_connectedPeripheralArray removeObject:peripheral];
     //这里可以进行一些操作,如之前连接时,监听了某个特征的通知,这里可以取消监听
 }
+#pragma mark - peripheralDelegate 
+
 //发现服务时调用
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
     if (error) {
@@ -158,7 +153,7 @@
         return;
     }
     //获取Characteristic的值
-    for (CBCharacteristic *characteristic in service.characteristics) {
+    for (CBCharacteristic *c in service.characteristics) {
         NSLog(@"服务server:%@ 的特征:%@, 读写属性:%ld", service.UUID.UUIDString, c, c.properties);
         //第一次调用,打印结果:
         //服务server:6666 的特征:<CBCharacteristic: 0x135e37410, UUID = 8888, properties = 0xDE, value = (null), notifying = NO>, 读写属性:->222
@@ -181,17 +176,17 @@
             }
         }
         if ([service.UUID.UUIDString isEqualToString:SeriveID7777]) {
-            [peripheral readValueForCharacteristic:characteristic];
+            [peripheral readValueForCharacteristic:c];
             //获取数据后,进入代理方法:
             //- peripheral: didUpdateValueForCharacteristic: error:
             //根据蓝牙协议发送指令,写在这里是自动发送,也可以写按钮方法,手动操作
             //我将指令封装了一个类,以下三个方法是其中的三个操作,具体是啥不用管,就知道是三个基本操作,返回数据后,会进入代理方法
             //校准时间
-            [CBCommunication cbCorrectTime:peripheral characteristic:characteristic];
+//            [CBCommunication cbCorrectTime:peripheral characteristic:characteristic];
             //获取mac地址
-            [CBCommunication cbGetMacID:peripheral characteristic:characteristic];
+//            [CBCommunication cbGetMacID:peripheral characteristic:characteristic];
             //获取脱机数据
-            [CBCommunication cbReadOfflineData:peripheral characteristic:characteristic];
+//            [CBCommunication cbReadOfflineData:peripheral characteristic:characteristic];
         }
     }
     //描述相关的方法,代理实际项目中没有涉及到,只做了解
@@ -203,6 +198,7 @@
         //还有写入读取描述值的方法和代理函数
     }
 }
+
 #pragma mark - 设置通知
 //设置通知
 -(void)notifyCharacteristic:(CBPeripheral *)peripheral
@@ -219,19 +215,14 @@
                    characteristic:(CBCharacteristic *)characteristic{
     [peripheral setNotifyValue:NO forCharacteristic:characteristic];
 }
-//设置通知后调用,监控蓝牙传回的实时数据
-- (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
-    if (error) {
-        NSLog(@"错误: %@", error.localizedDescription);
-    }
-    if (characteristic.isNotifying) {
-        [peripheral readValueForCharacteristic:characteristic];
-        //获取数据后,进入代理方法:
-        //- peripheral: didUpdateValueForCharacteristic: error:
-    } else {
-        NSLog(@"%@停止通知", characteristic);
-    }
+
+//- peripheral: didUpdateNotificationStateForCharacteristic: characteristic error:
+
+- (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(nonnull CBCharacteristic *)characteristic error:(nullable NSError *)error {
+    NSLog(@"error:%@\n characteristic:%@\n",error.userInfo,characteristic.value);
 }
+
+
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
@@ -241,9 +232,34 @@
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell"];
     if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"cell"];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cell"];
     }
+    CBPeripheral *peripheral = self.peripheralArray[indexPath.row];
+    
+    cell.textLabel.text = [NSString stringWithFormat:@"name:%@", peripheral.name?peripheral.name:@"NULL"];
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"identifier:%@",  peripheral.identifier.UUIDString];
     return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self.cbManager connectPeripheral:self.peripheralArray[indexPath.row]
+                                     options:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:CBConnectPeripheralOptionNotifyOnDisconnectionKey]];
+    [self.cbManager stopScan];
+    PeripheralViewController *vc = [[PeripheralViewController alloc] init];
+    CBPeripheral *peripheral = self.peripheralArray[indexPath.row];
+    for (int i = 0; i < peripheral.services.count; i ++) {
+        CBService *s = peripheral.services[i];
+        NSLog(@"services:%@",s.UUID.UUIDString);
+        for (int j = 0; j < s.characteristics.count; j++) {
+            CBCharacteristic *c = s.characteristics[i];
+            NSLog(@"characteristic:%lu",(unsigned long)c.properties);
+        }
+    }
+    vc.navigationItem.title = peripheral.name?peripheral.name:@"NULL";
+    [self.navigationController pushViewController:vc animated:YES];
+}
+-(void)viewWillAppear:(BOOL)animated {
+    [self.cbManager scanForPeripheralsWithServices:nil options:nil];
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

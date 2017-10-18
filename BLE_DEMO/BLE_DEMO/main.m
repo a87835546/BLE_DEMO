@@ -1,4 +1,3 @@
-//
 //  main.m
 //  BLE_DEMO
 //
